@@ -64,7 +64,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
   const upgraders = _.filter(Game.creeps, creep => creep.memory.m.role === "upgrader");
 
   console.log(`Upgraders: ${upgraders.length}`);
-  if (upgraders.length < 4) {
+  if (upgraders.length < 5) {
     const newName = "Upgrader" + Game.time;
 
     const creep = Game.spawns["Spawn1"].spawnCreep([WORK, CARRY, CARRY, MOVE], newName, {
@@ -77,7 +77,7 @@ export const loop = ErrorMapper.wrapLoop(() => {
   const builders = _.filter(Game.creeps, creep => creep.memory.m.role === "builder");
 
   console.log(`Builders: ${builders.length}`);
-  if (builders.length < 8) {
+  if (builders.length < 5) {
     const newName = "Builder" + Game.time;
     Game.spawns["Spawn1"].spawnCreep([WORK, CARRY, CARRY, MOVE], newName, {
       memory: { m: { role: "builder", building: false } }
