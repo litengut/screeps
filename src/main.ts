@@ -1,4 +1,12 @@
+import { runHarvester } from "harvester";
+import { runUpgrader } from "upgrader";
 import { ErrorMapper } from "utils/ErrorMapper";
+
+
+
+
+
+
 
 declare global {
   /*
@@ -15,12 +23,9 @@ declare global {
     log: any;
   }
 
-  interface CreepMemory {
-    role: string;
-    room: string;
-    working: boolean;
-  }
-
+ interface CreepMemory {
+  m: creepMemory
+ }
   // Syntax for adding properties to `global` (ex "global.log")
   namespace NodeJS {
     interface Global {
@@ -29,15 +34,62 @@ declare global {
   }
 }
 
+
+type creepMemory = HarvesterMemory | UpgraderMemory | BuilderMemory;
+
+type HarvesterMemory = {
+  role: "harvester";
+}
+
+type UpgraderMemory = {
+  role: "upgrader";
+  upgrading: boolean
+}
+
+type BuilderMemory = {
+  role: "builder";
+  working: boolean;
+}
+
+
+
+
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
-  console.log(`Current game tick is ${Game.time}`);
+
+  const harvesters = _.filter(Game.creeps, (creep) => creep.memory.m.role === "harvester");
+  console.log(`Harvesters: ${harvesters.length}`);
+  if (harvesters.length < 2) {
+    const newName = 'Harvester' + Game.time;
+    const creep = Game.spawns["Spawn1"].spawnCreep([WORK, CARRY, MOVE], newName, {memory: {m: { role: "harvester" }}});
+
+    console.log(`Spawning new harvester: ${newName}`);
+  }
+  const upgraders = _.filter(Game.creeps, (creep) => creep.memory.m.role === "upgrader");
+  console.log(`Upgraders: ${upgraders.length}`);
+  if (upgraders.length < 1) {
+    const newName = 'Upgrader' + Game.time;
+    const creep = Game.spawns["Spawn1"].spawnCreep([WORK, CARRY, MOVE], newName, {memory: {m: { role: "upgrader", upgrading: false }}});
+
+    console.log(`Spawning new upgrader: ${newName}`);
+  }
+
+  for (const name in Game.creeps) {
+    const creep = Game.creeps[name];
+    if (creep.memory.m.role === "harvester") {
+      runHarvester(creep);
+    } else if (creep.memory.m.role === "upgrader") {
+      runUpgrader(creep);
+    } else if (creep.memory.m.role === "builder") {
+      // runBuilder(creep); // Placeholder for builder logic
+    }
+  }
+
 
   // Automatically delete memory of missing creeps
   for (const name in Memory.creeps) {
     const creep = Game.creeps[name];
-    creep?.memory; // Accessing
     if (!(name in Game.creeps)) {
 
       delete Memory.creeps[name];
